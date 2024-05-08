@@ -18,7 +18,7 @@ class MetronomePageViewState extends State<MetronomePageView> {
 void initState() {
   super.initState();
   metronome = Metronome(bpmP: bpm, isMetronomeModeP: true, isSongModeP: false);
-  metronome.barPublisher.listen((_) {
+  metronome.barPublisher.listen((currCount) {
     setState(() {
       count++;
       if(metronome.isMetronomeMode) {
@@ -29,7 +29,7 @@ void initState() {
 
   // Subscribe to the barPublisher here
   final subscription = metronome.subscribeToBeatSignal();
-  subscription.listen((_) {
+  subscription.listen((currCount) {
     // tick for each signal sent
     setState(() {
       count++;

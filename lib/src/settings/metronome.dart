@@ -18,8 +18,8 @@ class Metronome {
   late String songName;
   late String soundURL;
 
-  final BehaviorSubject<void> barPublisher = BehaviorSubject<void>();
-  final BehaviorSubject<void> beatSignal = BehaviorSubject<void>();
+  final BehaviorSubject<int> barPublisher = BehaviorSubject<int>();
+  final BehaviorSubject<int> beatSignal = BehaviorSubject<int>();
 
   Metronome({
     String? songName,
@@ -58,41 +58,45 @@ class Metronome {
   }
 
   void toggleMetronome(int bpm) {
-    if (metronomeTimer?.isActive ?? false) {
-      metronomeTimer?.cancel();
-      count = 1;
-    } else {
-      final interval = 60.0 / bpmField;
-      delay = interval;
-      isFirstBar = true;
-      isFirstClick = true;
-      tick();      
-      metronomeTimer =  Timer.periodic(Duration(milliseconds: (interval * 1000).round()), (timer) {
-        tick();
-      });
-      if (isSongMode) {
+  if (metronomeTimer?.isActive ?? false) {
+    metronomeTimer?.cancel();
+    count = 1;
+  } else {
+    final interval = 60.0 / bpmField;
+    delay = interval;
+    isFirstBar = true;
+    isFirstClick = true;
+    if (isSongMode) {
         audioPlayer.play(AssetSource(soundURL));
-      }
-    }
+    }    
+    // Add slight delay upon start to better match audio recordings
+    
+      tick(); // Immediately emit the first tick
+      metronomeTimer = Timer.periodic(Duration(milliseconds: (interval * 1000).round()), (timer) {
+        tick();
+      }); 
+
   }
+}
+
 
   void tick() {
   // if it is the first click dont increment count yet.
   if (isFirstClick && isMetronomeMode) {
-    beatSignal.add(null);
+    beatSignal.add(count);
     isFirstClick = false;
     return;
   }
 
   if (isSongMode && count == 1 && !isFirstBar) { // Emit a chord signal only on the first beat of the chord
-    barPublisher.add(null);
+    barPublisher.add(count);
   }
   else if (isFirstBar) {
     isFirstBar = false;
   }
 
   count++;
-  beatSignal.add(null); // Always emit a beat signal
+  beatSignal.add(count); // Always emit a beat signal
 
   if (isSongMode && count > chordDuration) {
     count = 1;
@@ -119,11 +123,11 @@ class Metronome {
     }
   }
 
-  Stream<void> subscribeToBarSignal() {
+  Stream<int> subscribeToBarSignal() {
     return barPublisher.stream;
   }
 
-  Stream<void> subscribeToBeatSignal() {
+  Stream<int> subscribeToBeatSignal() {
     return beatSignal.stream;
   }
 }

@@ -13,7 +13,7 @@ class JazzPageViewState extends State<JazzPageView> {
   String selectedKey = "";
 
   // List of available songs
-  List<String> songs = ["Autumn Leaves", "Misty", "1-6-2-5"];
+  List<String> songs = ["Autumn Leaves", "Misty", "1-6-2-5-1"];
   List<String> keys = ["Em", "Cm", "Gm"];
   
   double bpm = 90; // Update with unique song names

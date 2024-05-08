@@ -6,16 +6,16 @@ import 'country_page_view.dart';
 import 'add_own_page_view.dart';
 import 'metronome_page_view.dart';
 
-class ContentView extends StatefulWidget {
-  const ContentView({super.key});
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
 
   static const routeName = '/pages';
 
   @override
-  ContentViewState createState() => ContentViewState();
+  HomeViewState createState() => HomeViewState();
 }
 
-class ContentViewState extends State<ContentView> {
+class HomeViewState extends State<HomeView> {
   String selectedGenre = "Jazz";
   List<String> genres = ["Jazz", "Pop", "Rock", "Country"];
 
