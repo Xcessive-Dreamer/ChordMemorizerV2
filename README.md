@@ -1,4 +1,8 @@
 TODO:
 
-- Fix the current Misty track to start on a more precise downbeat. (current one isnt bad)
 - implement data base for chord progression retrieval and storage.
+- Add a small UI displaying the chord progression as it goes on and then clears after you reach the end of first chorus.
+- Add UI element to show what section of song you are in A section, b section, verse, chorus etc.
+- Finish transposition logic
+- add all options for key logic for the song, double check transposition login
+- AI for predicting chord changes

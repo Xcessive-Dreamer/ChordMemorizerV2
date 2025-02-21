@@ -81,6 +81,10 @@ class ContentViewBodyState extends State<ContentViewBody> {
 
   @override
   Widget build(BuildContext context) {
+    
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Padding(
       padding: const EdgeInsets.all(40.0),
       child: Column(
@@ -97,7 +101,7 @@ class ContentViewBodyState extends State<ContentViewBody> {
           ),
           const SizedBox(height: 40.0),
           const Text(
-            "The Chord Progression Memorizer empowers you to practice your favorite music anytime, anywhere. Select a genre below or add your own changes to get started memorizing songs.",
+            "The Chord Progression Memorizer empowers you to practice your favorite music anytime, anywhere. \n Select a genre below or add your own changes to get started memorizing songs.",
             style: TextStyle(
               color: Color.fromARGB(255, 0, 0, 0),
             ),
@@ -118,63 +122,90 @@ class ContentViewBodyState extends State<ContentViewBody> {
                 menuStyle: MenuStyle(
                   backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
                 ),
-                label: const Text("Genre Select"),
+                label: const Text(
+                  "Genre Select",
+                  style: TextStyle(color: Colors.black),  // Hardcode label text color to black
+                ),
                 width: 200,
                 onSelected: (String? newValue) {
                   setState(() {
                     selectedGenre = newValue!;
                   });
                 },
-                dropdownMenuEntries: genres.map((genre) {
-                  return DropdownMenuEntry(value: genre, label: genre);
+                dropdownMenuEntries: genres.map<DropdownMenuEntry<String>>((String genre) {
+                  return DropdownMenuEntry<String>(
+                    value: genre,
+                    label: genre,
+                    style: MenuItemButton.styleFrom(
+                      foregroundColor: Colors.black,  // Hardcode text color to black
+                    ),
+                  );
                 }).toList(),
               ),
             ),
           ),
-          const SizedBox(height: 40.0),
-          ElevatedButton(
-            onPressed: () {
-              navigateToGenrePage(selectedGenre);
-            },
-            child: Text(
-              "Go to $selectedGenre",
-              style: const TextStyle(
-                color: Color.fromARGB(255, 0, 0, 0),
-                fontSize: 16,
-                fontWeight: FontWeight.normal,
+          const SizedBox(height: 10),  // Add spacing between buttons
+            ElevatedButton(
+              onPressed: () {
+                navigateToGenrePage(selectedGenre);
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 40), // Button size
+                minimumSize: const Size(180, 40), // Set the minimum size for the button
+              ),
+              child: Text(
+                "Go to $selectedGenre",
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AddOwnPageView()),
-              );
-            },
-            child: const Text("Add Your Own",
-              style: TextStyle(
-                color: Color.fromARGB(255, 0, 0, 0),
-                fontSize: 16,
-                fontWeight: FontWeight.normal,
+            const SizedBox(height: 10), // Add spacing between buttons
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddOwnPageView()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                minimumSize: const Size(180, 40),  // Set the minimum size for the button
+              ),
+              child: Text(
+                "Add Your Own",
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MetronomePageView()),
-              );
-            },
-            child: const Text("Metronome", style: TextStyle(
-              color: Color.fromARGB(255, 0, 0, 0),
-              fontSize: 16,
-              fontWeight: FontWeight.normal,
+            const SizedBox(height: 10), 
+             // Add spacing between buttons
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MetronomePageView()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                minimumSize: const Size(180, 40),  // Set the minimum size for the button
+              ),
+              child: Text(
+                "Metronome",
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
             ),
-            ),
-          ),
-        ],
+          ]
       ),
     );
   }

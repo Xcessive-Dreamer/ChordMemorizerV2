@@ -6,6 +6,7 @@ import 'country_page_view.dart';
 import 'add_own_page_view.dart';
 import 'metronome_page_view.dart';
 
+
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -21,7 +22,10 @@ class HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    
+
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.red : Colors.blue;
+      
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 168, 253, 249),
       appBar: AppBar(
@@ -32,20 +36,21 @@ class HomeViewState extends State<HomeView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              "Welcome To The Chord \n Progression Memorizer!",
+            Text(
+              "Welkome To The Chord \n Progression Memorizer, work pls!",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20.0,
-                color: Color.fromARGB(255, 0, 0, 0),
+                color: textColor,  // Dynamic text color
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40.0),
-            const Text(
-              "The Chord Progression Memorizer empowers you to practice your favorite music anytime, anywhere. Select a genre below or add your own changes to get started memorizing songs.",
+            Text(
+              "The Chord Progression Memorizer empowers you to practice your favorite music anytime, anywhere. \n Select a genre below or add your own changes to get started memorizing songs.",
               style: TextStyle(
-                color: Color.fromARGB(255, 0, 0, 0),
+                // add if check to check if dark or light mode
+                color: textColor,
               ),
               textAlign: TextAlign.center,
             ),
@@ -85,8 +90,8 @@ class HomeViewState extends State<HomeView> {
               },
               child: Text(
                 "Go to $selectedGenre",
-                style: const TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
+                style: TextStyle(
+                  color: textColor,
                   fontSize: 16,
                   fontWeight: FontWeight.normal,
                   // Add more properties as needed
@@ -100,9 +105,9 @@ class HomeViewState extends State<HomeView> {
                   MaterialPageRoute(builder: (context) => const AddOwnPageView()),
                 );
               },
-              child: const Text("Add Your Own",
+              child:const Text("Add Your Own",
                 style: TextStyle(
-                  color: Color.fromARGB(255, 0, 0, 0),
+                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.normal,
                 ),
@@ -115,8 +120,8 @@ class HomeViewState extends State<HomeView> {
                   MaterialPageRoute(builder: (context) => const MetronomePageView()),
                 );
               },
-              child: const Text("Metronome", style: TextStyle(
-                color: Color.fromARGB(255, 0, 0, 0),
+              child: Text("Metronome", style: TextStyle(
+                color: textColor,
                 fontSize: 16,
                 fontWeight: FontWeight.normal,
               ),
