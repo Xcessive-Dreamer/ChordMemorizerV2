@@ -1,0 +1,62 @@
+[
+    {
+      "name": "Autumn Leaves",
+      "chords": [
+        { "original": "Am7", "duration": 4 },
+        { "original": "D7", "duration": 4 },
+        { "original": "GMaj7", "duration": 4 },
+        { "original": "CMaj7", "duration": 4 },
+        { "original": "F#m7b5", "duration": 4 },
+        { "original": "B7", "duration": 4 },
+        { "original": "Em", "duration": 4 },
+        { "original": "Em", "duration": 4 },
+
+        { "original": "Am7", "duration": 4 },
+        { "original": "D7", "duration": 4 },
+        { "original": "GMaj7", "duration": 4 },
+        { "original": "CMaj7", "duration": 4 },
+        { "original": "F#m7b5", "duration": 4 },
+        { "original": "B7", "duration": 4 },
+        { "original": "Em", "duration": 4 },
+        { "original": "Em", "duration": 4 },
+
+        { "original": "F#m7b5", "duration": 4 },
+        { "original": "B7", "duration": 4 },
+        { "original": "Em", "duration": 4 },
+        { "original": "Em", "duration": 4 },
+        { "original": "Am7", "duration": 4 },
+        { "original": "D7", "duration": 4 },
+        { "original": "GMaj7", "duration": 4 },
+        { "original": "CMaj7", "duration": 4 },
+        { "original": "F#m7b5", "duration": 4 },
+        { "original": "B7", "duration": 4 },
+        { "original": "Em7", "duration": 2 },
+        { "original": "A7", "duration": 2 },
+        { "original": "Dm7", "duration": 2 },
+        { "original": "G7", "duration": 2 },
+        { "original": "CMaj7", "duration": 4 },
+        { "original": "F#m7b5", "duration": 2 },
+        { "original": "B7", "duration": 2 },
+        { "original": "Em", "duration": 4 },
+        { "original": "Em", "duration": 4 }
+      ]
+    },
+    {
+      "name": "Misty",
+      "chords": [
+        { "original": "EbMaj7", "duration": 4 },
+        { "original": "Bbm7", "duration": 4 }
+      ]
+    },
+    {
+      "name": "1-6-2-5-1",
+      "chords": [
+        { "original": "CMaj7", "duration": 2 },
+        { "original": "Am7", "duration": 2 },
+        { "original": "Dm7", "duration": 2 },
+        { "original": "G7","duration": 2 },
+        { "original": "CMaj7","duration": 4 }
+      ]
+    }
+  ]
+  

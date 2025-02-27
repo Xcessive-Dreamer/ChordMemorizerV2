@@ -18,6 +18,8 @@ dependencies:
   rxdart: ^0.27.7
   sqflite: ^2.3.3+1
   path: ^1.9.0
+  sqflite_common_ffi: ^2.3.3
+  sqflite_common_ffi_web: ^0.4.3+1
 
 dev_dependencies:
   flutter_test:
@@ -43,3 +45,4 @@ flutter:
     - assets/audio/Autumn Leaves.mp3
     - assets/audio/Misty.mp3
     - assets/audio/metronome_click.mp3
+    - assets/songs/songs.JSON

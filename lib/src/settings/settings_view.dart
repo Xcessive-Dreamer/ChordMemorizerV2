@@ -1,16 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
-
+import '../backend/song_db.dart'; // Import the DatabaseHelper
 import 'settings_controller.dart';
+import 'dart:developer';
 
-/// Displays the various settings that can be customized by the user.
-///
-/// When a user changes a setting, the SettingsController is updated and
-/// Widgets that listen to the SettingsController are rebuilt.
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key, required this.controller});
 
   static const routeName = '/settings';
-
   final SettingsController controller;
 
   @override
@@ -21,31 +19,66 @@ class SettingsView extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        // Glue the SettingsController to the theme selection DropdownButton.
-        //
-        // When a user selects a theme from the dropdown list, the
-        // SettingsController is updated, which rebuilds the MaterialApp.
-        child: DropdownButton<ThemeMode>(
-          // Read the selected themeMode from the controller
-          value: controller.themeMode,
-          // Call the updateThemeMode method any time the user selects a theme.
-          onChanged: controller.updateThemeMode,
-          items: const [
-            DropdownMenuItem(
-              value: ThemeMode.system,
-              child: Text('System Theme'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Theme Selector
+            DropdownButton<ThemeMode>(
+              value: controller.themeMode,
+              onChanged: controller.updateThemeMode,
+              items: const [
+                DropdownMenuItem(
+                  value: ThemeMode.system,
+                  child: Text('System Theme'),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.light,
+                  child: Text('Light Theme'),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.dark,
+                  child: Text('Dark Theme'),
+                ),
+              ],
             ),
-            DropdownMenuItem(
-              value: ThemeMode.light,
-              child: Text('Light Theme'),
+
+            const SizedBox(height: 20),
+
+            // Reload Database Button
+            ElevatedButton.icon(
+              onPressed: () async {
+                await _reloadDatabase(context);
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Reload Database'),
             ),
-            DropdownMenuItem(
-              value: ThemeMode.dark,
-              child: Text('Dark Theme'),
-            )
           ],
         ),
       ),
     );
+  }
+
+  /// Function to reload the database when the button is pressed
+  Future<void> _reloadDatabase(BuildContext context) async {
+    try {
+      log("♻️ Reloading database...");
+
+      await DatabaseHelper.instance.deleteAll();
+      await DatabaseHelper.instance.populateDefaultSongs(await DatabaseHelper.instance.database);
+
+      debugPrint("✅ Database reloaded successfully!");
+
+      // Show confirmation in UI
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Database reloaded successfully!')),
+      );
+    } catch (e) {
+      debugPrint("❌ Error reloading database: $e");
+
+      // Show error in UI
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 }
