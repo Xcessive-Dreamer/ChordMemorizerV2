@@ -84,7 +84,7 @@ void main() {
       await quizModel.insertSong(songToInsert);
 
       // Now load the song by its name.
-      await quizModel.loadSong("Test Song");
+      await quizModel.loadSong("Test Song", "songs");
       expect(quizModel.currentSong, isNotNull);
 
       // Define expected transposition (for example, transposing from C to Eb).

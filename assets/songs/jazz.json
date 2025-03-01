@@ -62,6 +62,18 @@
         { "original": "G7","duration": 2 },
         { "original": "CMaj7","duration": 4 }
       ]
+    },
+
+    {
+      "name": "Jazz Blues",
+      "genre":"Jazz",
+      "chords": [
+        { "original": "C7", "duration": 4 },
+        { "original": "F7", "duration": 4 },
+        { "original": "C7", "duration": 4 },
+        { "original": "C7","duration": 2 },
+        { "original": "A7","duration": 2 }
+      ]
     }
   ]
   

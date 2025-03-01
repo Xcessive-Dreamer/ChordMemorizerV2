@@ -45,4 +45,8 @@ flutter:
     - assets/audio/Autumn Leaves.mp3
     - assets/audio/Misty.mp3
     - assets/audio/metronome_click.mp3
+    - assets/songs/jazz.json
+    - assets/songs/rock.json
+    - assets/songs/country.json
+    - assets/songs/pop.json
     - assets/songs/songs.json

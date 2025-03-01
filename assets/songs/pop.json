@@ -1,0 +1,13 @@
+[
+  {
+    "name": "Lost",
+    "genre": "Pop",
+    "chords": [
+      { "original": "CMaj7", "duration": 4 },
+      { "original": "Am7", "duration": 2 },
+      { "original": "G", "duration": 2 },
+      { "original": "F", "duration": 4 }
+    ]
+  }
+]
+  

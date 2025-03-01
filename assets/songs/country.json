@@ -1,0 +1,12 @@
+[
+    {
+        "name": "Bluegrass",
+        "genre": "Country",
+        "chords": [
+        { "original": "C", "duration": 4 },
+        { "original": "G7", "duration": 2 },
+        { "original": "F", "duration": 2 },
+        { "original": "G7", "duration": 4 }
+        ]
+    }
+]

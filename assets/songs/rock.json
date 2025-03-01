@@ -1,0 +1,12 @@
+[
+    {
+      "name": "Rock Song",
+      "genre": "Rock",
+      "chords": [
+        { "original": "A5", "duration": 4 },
+        { "original": "D5", "duration": 2 },
+        { "original": "G5", "duration": 2 },
+        { "original": "F5", "duration": 4 }
+      ]
+    }
+]

@@ -28,14 +28,14 @@ class QuizModel {
 
 
   /// Loads a song from the database by name.
-  Future<void> loadSong(String songName) async {
+  Future<void> loadSong(String songName, String genre) async {
   try {
     // await DatabaseHelper.instance.deleteAll(); UNCOMMENT TO REFRESH DB 
     // await DatabaseHelper.instance.populateDefaultSongs(await DatabaseHelper.instance.database);
     // Ensure database is initialized before accessing
     await DatabaseHelper.instance.database;
 
-    currentSong = await DatabaseHelper.instance.getSongByName(songName);
+    currentSong = await DatabaseHelper.instance.getSongByName(songName, genre);
     
     if (currentSong == null) {
     debugPrint("❌ Song '$songName' not found in database.");
@@ -56,9 +56,9 @@ class QuizModel {
   }
 }
 
-  /// Inserts a new song into the database.
+  /// Inserts a new song into the database. FIX AND TAKE OUT HARD CODE
   Future<void> insertSong(Song song) async {
-    await DatabaseHelper.instance.insertSong(song);
+    await DatabaseHelper.instance.insertSong(song, "Jazz");
   }
 
   /// Transposes a song into the selected key.

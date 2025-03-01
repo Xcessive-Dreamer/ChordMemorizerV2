@@ -18,7 +18,7 @@ void main() {
     await DatabaseHelper.instance.populateDefaultSongs(await DatabaseHelper.instance.database);
 
     // Retrieve the song by name ("Autumn Leaves").
-    Song? song = await DatabaseHelper.instance.getSongByName("Misty");
+    Song? song = await DatabaseHelper.instance.getSongByName("Misty", "songs");
 
     // log out song details for verification.
     if (song != null) {
@@ -48,7 +48,7 @@ void main() {
 
     test('Retrieve "Autumn Leaves" from DB and log song data', () async {
       // Load the song by name from the database.
-      await quizModel.loadSong("Autumn Leaves");
+      await quizModel.loadSong("Autumn Leaves", "songs");
 
       if (quizModel.currentSong != null) {
         log("Song: ${quizModel.currentSong!.name}");

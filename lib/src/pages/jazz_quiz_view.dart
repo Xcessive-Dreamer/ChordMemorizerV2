@@ -45,7 +45,7 @@ class JazzQuizViewState extends State<JazzQuizView> {
 
     quizModel = QuizModel();
     // Call loadSong only once and store its future.
-    _loadSongFuture = quizModel.loadSong(widget.songName).then((_) {
+    _loadSongFuture = quizModel.loadSong(widget.songName, "jazz").then((_) {
       if (quizModel.currentSong != null && quizModel.currentSong!.chordChanges.isNotEmpty) {
         setState(() {
           // Set the correct chord duration before metronome starts.

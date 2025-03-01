@@ -14,7 +14,6 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    // Ensure only one connection is opened
     _database ??= await _initDB('songs.db');
     return _database!;
   }
@@ -35,7 +34,8 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE songs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL
+        name TEXT NOT NULL,
+        genre TEXT NOT NULL  -- ✅ Added genre field
       )
     ''');
 
@@ -50,51 +50,61 @@ class DatabaseHelper {
       )
     ''');
 
-    // Populate default songs from JSON
     await populateDefaultSongs(db);
   }
 
-  Future<void> populateDefaultSongs(Database db) async {
-    final countResult = await db.rawQuery('SELECT COUNT(*) as count FROM songs');
-    int count = Sqflite.firstIntValue(countResult) ?? 0;
-    if (count > 0) return; // If songs already exist, don't repopulate.
+Future<void> populateDefaultSongs(Database db) async {
+  final countResult = await db.rawQuery('SELECT COUNT(*) as count FROM songs');
+  int count = Sqflite.firstIntValue(countResult) ?? 0;
+  if (count > 0) return; // If songs already exist, don't repopulate.
 
-    debugPrint("Populating default songs from JSON...");
+  debugPrint("📥 Populating default songs from JSON...");
 
+  List<String> genreFiles = ["jazz", "pop", "rock", "country"]; // ✅ JSON file names
+
+  for (String genreFile in genreFiles) {
     try {
-      // Load JSON using rootBundle (not a file path)
-      String jsonString = await rootBundle.loadString('assets/songs/songs.json');
+      String jsonPath = 'assets/songs/$genreFile.json';
+      String jsonString = await rootBundle.loadString(jsonPath);
       List<dynamic> jsonData = jsonDecode(jsonString);
 
       for (var songData in jsonData) {
+        // ✅ Extract genre from JSON instead of assuming from filename
+        String genre = songData["genre"];
+
         Song song = Song(
           songData["name"],
           (songData["chords"] as List).map((chord) {
             return ChordChange(
               chord["original"],
-              [], // Options will be generated dynamically at runtime.
+              [],
               chord["duration"]
             );
           }).toList()
         );
-        await insertSong(song);
+
+        // ✅ Store genre from JSON, not from loop
+        await insertSong(song, genre);
       }
 
-      debugPrint("✅ Default songs loaded successfully!");
+      debugPrint("✅ Loaded ${jsonData.length} songs from $genreFile.json!");
     } catch (e) {
-      debugPrint("❌ Error loading default songs: $e");
+      debugPrint("❌ Error loading $genreFile.json: $e");
     }
   }
+}
 
-  Future<int> insertSong(Song song) async {
+  Future<int> insertSong(Song song, String genre) async {
     final db = await instance.database;
-    int songId = await db.insert('songs', {'name': song.name});
+    int songId = await db.insert('songs', {
+      'name': song.name,
+      'genre': genre  // ✅ Store genre in database
+    });
+
     for (var chord in song.chordChanges) {
       await db.insert('chord_changes', {
         'song_id': songId,
         'original_chord': chord.originalChord,
-        // Store chord options as a comma-separated string.
-        // Since options are generated dynamically, this may be an empty string.
         'target_chord_options': chord.targetChordOptions.join(','),
         'duration': chord.durationInBeats,
       });
@@ -102,38 +112,44 @@ class DatabaseHelper {
     return songId;
   }
 
-  Future<Song?> getSongByName(String name) async {
+  Future<Song?> getSongByName(String songName, String genre) async {
+    debugPrint("🔍 Searching for '$songName' in $genre.json...");
+
+    try {
+      String jsonPath = 'assets/songs/$genre.json';
+      String jsonString = await rootBundle.loadString(jsonPath);
+      List<dynamic> jsonData = jsonDecode(jsonString);
+
+      for (var songData in jsonData) {
+        if (songData["name"] == songName) {
+          List<ChordChange> chordChanges = (songData["chords"] as List).map((chord) {
+            return ChordChange(
+              chord["original"],
+              [],
+              chord["duration"]
+            );
+          }).toList();
+
+          debugPrint("✅ Found song '$songName' in $genre.json.");
+          return Song(songName, chordChanges);
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ Error loading $genre.json: $e");
+    }
+
+    debugPrint("❌ Song '$songName' not found in $genre.json.");
+    return null; // Song not found
+  }
+
+  Future<List<Song>> getSongsByGenre(String genre) async {
     final db = await instance.database;
     final songData = await db.query(
       'songs',
-      where: 'name = ?',
-      whereArgs: [name],
-      limit: 1,
-    );
-    if (songData.isEmpty) return null;
-    final songRow = songData.first;
-
-    final chordData = await db.query(
-      'chord_changes',
-      where: 'song_id = ?',
-      whereArgs: [songRow['id']],
+      where: 'genre = ?',
+      whereArgs: [genre],
     );
 
-    List<ChordChange> chordChanges = chordData.map((map) {
-      return ChordChange(
-        map['original_chord'] as String,
-        // Convert the comma-separated string back into a list.
-        (map['target_chord_options'] as String).split(','),
-        map['duration'] as int,
-      );
-    }).toList();
-
-    return Song(songRow['name'] as String, chordChanges);
-  }
-
-  Future<List<Song>> getAllSongs() async {
-    final db = await instance.database;
-    final songData = await db.query('songs');
     List<Song> songs = [];
     for (var songRow in songData) {
       final chordData = await db.query(
@@ -141,6 +157,7 @@ class DatabaseHelper {
         where: 'song_id = ?',
         whereArgs: [songRow['id']],
       );
+
       List<ChordChange> chordChanges = chordData.map((map) {
         return ChordChange(
           map['original_chord'] as String,
@@ -148,6 +165,7 @@ class DatabaseHelper {
           map['duration'] as int,
         );
       }).toList();
+
       songs.add(Song(songRow['name'] as String, chordChanges));
     }
     return songs;
