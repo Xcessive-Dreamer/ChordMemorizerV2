@@ -28,7 +28,7 @@ class JazzPageViewState extends State<JazzPageView> {
 
   Future<void> _loadSongsFromDB() async {
     // Retrieve all songs from the database.
-    List<Song> dbSongs = await DatabaseHelper.instance.getSongsByGenre("Jazz");
+    List<Song> dbSongs = await DatabaseHelper.instance.getSongsByGenre("jazz");
     setState(() {
       songs = dbSongs.map((song) => song.name).toList();
       // If there are songs available, set the default selection.

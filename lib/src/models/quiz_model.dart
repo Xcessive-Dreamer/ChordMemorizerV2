@@ -30,8 +30,6 @@ class QuizModel {
   /// Loads a song from the database by name.
   Future<void> loadSong(String songName, String genre) async {
   try {
-    // await DatabaseHelper.instance.deleteAll(); UNCOMMENT TO REFRESH DB 
-    // await DatabaseHelper.instance.populateDefaultSongs(await DatabaseHelper.instance.database);
     // Ensure database is initialized before accessing
     await DatabaseHelper.instance.database;
 
@@ -44,7 +42,6 @@ class QuizModel {
 
       // Generate chord options dynamically
       List<ChordChange> updatedChords = currentSong!.chordChanges.map((chord) {
-      debugPrint("🎵 Processing chord: ${chord.originalChord}");
         List<String> options = generateChordOptions(chord.originalChord);
         return ChordChange(chord.originalChord, options, chord.durationInBeats);
       }).toList();
