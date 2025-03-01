@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../settings/metronome.dart'; // Import your Metronome class
-import '../models/quiz_model.dart';   // Import your QuizModel class
+import '../settings/metronome.dart'; 
+import '../models/quiz_model.dart'; 
 
 class JazzQuizView extends StatefulWidget {
   final String songName;
@@ -45,7 +45,14 @@ class JazzQuizViewState extends State<JazzQuizView> {
 
     quizModel = QuizModel();
     // Call loadSong only once and store its future.
-    _loadSongFuture = quizModel.loadSong(widget.songName);
+    _loadSongFuture = quizModel.loadSong(widget.songName).then((_) {
+      if (quizModel.currentSong != null && quizModel.currentSong!.chordChanges.isNotEmpty) {
+        setState(() {
+          // Set the correct chord duration before metronome starts.
+          metronome.chordDuration = quizModel.currentSong!.chordChanges[0].durationInBeats;
+        });
+      }
+    });
 
     // Listen to the beat signal to update the count.
     metronome.beatSignal.listen((currCount) {
@@ -133,7 +140,7 @@ class JazzQuizViewState extends State<JazzQuizView> {
                       Text('Key: ${widget.songKey}', style: const TextStyle(color: Colors.black)),
                       Text('Count: $count', style: const TextStyle(color: Colors.black)),
                       // Added text to show current chord.
-                      Text('Current Chord: ${chordChange.originalChord}', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                      Text('Current Chord Duration: ${chordChange.durationInBeats}', style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -192,20 +199,23 @@ class JazzQuizViewState extends State<JazzQuizView> {
   }
 
   void _updateQuestionIndex() {
-    setState(() {
+  setState(() {
+    if (quizModel.currentSong != null) {
       if (currentQuestionIndex < quizModel.currentSong!.chordChanges.length - 1) {
         currentQuestionIndex++;
-        metronome.chordDuration = quizModel.currentSong!
-            .chordChanges[currentQuestionIndex]
-            .durationInBeats;
       } else {
         currentQuestionIndex = 0;
       }
-      isCorrectChord = false;
-      chordSelected = false;
-      selectedChordIndex = null;
-      isIncrementingIndex = false;
-    });
+
+      // Always update the metronome to the correct duration.
+      metronome.chordDuration = quizModel.currentSong!.chordChanges[currentQuestionIndex].durationInBeats;
+    }
+
+    isCorrectChord = false;
+    chordSelected = false;
+    selectedChordIndex = null;
+    isIncrementingIndex = false;
+  });
   }
 
   @override

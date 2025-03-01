@@ -45,7 +45,9 @@
       "name": "Misty",
       "chords": [
         { "original": "EbMaj7", "duration": 4 },
-        { "original": "Bbm7", "duration": 4 }
+        { "original": "Bbm7", "duration": 2 },
+        { "original": "Eb7", "duration": 2 },
+        { "original": "AbMaj7", "duration": 4 }
       ]
     },
     {

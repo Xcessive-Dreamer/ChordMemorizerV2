@@ -45,4 +45,4 @@ flutter:
     - assets/audio/Autumn Leaves.mp3
     - assets/audio/Misty.mp3
     - assets/audio/metronome_click.mp3
-    - assets/songs/songs.JSON
+    - assets/songs/songs.json
