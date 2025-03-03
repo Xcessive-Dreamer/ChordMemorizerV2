@@ -6,12 +6,16 @@ class JazzQuizView extends StatefulWidget {
   final String songName;
   final int bpm;
   final String songKey;
+  final bool isSharpKey;
+  final bool isFlatKey;
 
   const JazzQuizView({
     super.key,
     required this.songName,
     required this.bpm,
     required this.songKey,
+    required this.isSharpKey,
+    required this.isFlatKey,
   });
 
   @override
@@ -21,7 +25,9 @@ class JazzQuizView extends StatefulWidget {
 class JazzQuizViewState extends State<JazzQuizView> {
   late final Metronome metronome;
   late final QuizModel quizModel;
-  late Future<void> _loadSongFuture; // <-- Store the load future here.
+  late Future<void> _loadSongFuture;
+  late bool isFlatKey;
+  late bool isSharpKey;
   
   bool isMetronomeOn = false;
   bool isCorrectChord = false;
@@ -44,6 +50,10 @@ class JazzQuizViewState extends State<JazzQuizView> {
     );
 
     quizModel = QuizModel();
+
+    quizModel.isSharpKey = widget.isSharpKey;
+    quizModel.isFlatKey = widget.isFlatKey;
+
     // Call loadSong only once and store its future.
     _loadSongFuture = quizModel.loadSong(widget.songName, "jazz").then((_) {
       if (quizModel.currentSong != null && quizModel.currentSong!.chordChanges.isNotEmpty) {
@@ -52,6 +62,12 @@ class JazzQuizViewState extends State<JazzQuizView> {
           metronome.chordDuration = quizModel.currentSong!.chordChanges[0].durationInBeats;
         });
       }
+      // get current song original key
+      String originalKey = quizModel.currentSong!.key; 
+      if(originalKey != widget.songKey) {
+        debugPrint("🎵 Original Key: $originalKey, Transposing to: ${widget.songKey}");
+        quizModel.currentSong = quizModel.transposeSong(originalKey, widget.songKey, quizModel.currentSong!);
+      } 
     });
 
     // Listen to the beat signal to update the count.

@@ -2,6 +2,7 @@
   {
     "name": "Lost",
     "genre": "Pop",
+    "key": "C",
     "chords": [
       { "original": "CMaj7", "duration": 4 },
       { "original": "Am7", "duration": 2 },

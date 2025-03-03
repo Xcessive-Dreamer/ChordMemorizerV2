@@ -2,6 +2,7 @@
     {
         "name": "Bluegrass",
         "genre": "Country",
+        "key": "C",
         "chords": [
         { "original": "C", "duration": 4 },
         { "original": "G7", "duration": 2 },

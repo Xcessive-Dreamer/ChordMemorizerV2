@@ -2,6 +2,7 @@
     {
       "name": "Rock Song",
       "genre": "Rock",
+      "key": "A",
       "chords": [
         { "original": "A5", "duration": 4 },
         { "original": "D5", "duration": 2 },

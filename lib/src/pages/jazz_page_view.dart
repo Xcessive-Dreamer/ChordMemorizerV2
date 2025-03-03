@@ -11,14 +11,14 @@ class JazzPageView extends StatefulWidget {
 }
 
 class JazzPageViewState extends State<JazzPageView> {
-  String selectedSong = ""; // Default selected song
-  String selectedKey = "";
-  
-  // List of available songs, initially empty; will be loaded from the database.
+  String? selectedSong;
+  String? selectedKey;
+  bool useFlatKeys = true; // Default to flats
+  bool useSharpKeys = false; // Default to flats
+
   List<String> songs = [];
-  List<String> keys = ["Em", "Cm", "Gm"];
-  
-  double bpm = 90; // BPM value
+  List<String> keys = [];
+  double bpm = 90;
 
   @override
   void initState() {
@@ -27,13 +27,61 @@ class JazzPageViewState extends State<JazzPageView> {
   }
 
   Future<void> _loadSongsFromDB() async {
-    // Retrieve all songs from the database.
     List<Song> dbSongs = await DatabaseHelper.instance.getSongsByGenre("jazz");
     setState(() {
       songs = dbSongs.map((song) => song.name).toList();
-      // If there are songs available, set the default selection.
-      if (songs.isNotEmpty) {
-        selectedSong = songs[0];
+      if (dbSongs.isNotEmpty) {
+        selectedSong = dbSongs[0].name;
+        selectedKey = dbSongs[0].key;
+        keys = _generateKeyOptions(selectedKey!);
+      }
+    });
+  }
+
+  Future<void> _updateKeyForSelectedSong(String songName) async {
+    List<Song> dbSongs = await DatabaseHelper.instance.getSongsByGenre("jazz");
+    try {
+      Song selected = dbSongs.firstWhere((song) => song.name == songName);
+      setState(() {
+        selectedKey = selected.key;
+        keys = _generateKeyOptions(selected.key);
+      });
+    } catch (e) {
+      debugPrint("❌ Could not find key for song $songName: $e");
+    }
+  }
+
+  // use circle of fifths logic
+  List<String> _generateKeyOptions(String songKey) {
+    List<String> majorSharps = ["A", "B", "C", "C#", "D", "E", "F#", "G"];
+    List<String> majorFlats = ["Ab", "Bb", "C", "Cb", "Db", "Eb", "F", "Gb"];
+    List<String> minorSharps = ["D#m", "G#m", "C#m", "F#m", "Bm", "Em", "Am", "Fm"];
+    List<String> minorFlats = ["Am", "Dm", "Gm", "Cm", "Fm", "Bbm", "Ebm", "Abm"];
+
+    bool isMinor = songKey.endsWith("m");
+    List<String> allKeys = isMinor
+        ? (useFlatKeys ? minorFlats : minorSharps)
+        : (useFlatKeys ? majorFlats : majorSharps);
+
+    return [songKey, ...allKeys.where((key) => key != songKey)];
+  }
+
+  void _toggleFlatKeys(bool value) {
+    setState(() {
+      useFlatKeys = value;
+      useSharpKeys = !value;
+      if (selectedKey != null) {
+        keys = _generateKeyOptions(selectedKey!);
+      }
+    });
+  }
+
+  void _toggleSharpKeys(bool value) {
+    setState(() {
+      useSharpKeys = value;
+      useFlatKeys = !value;
+      if (selectedKey != null) {
+        keys = _generateKeyOptions(selectedKey!);
       }
     });
   }
@@ -41,76 +89,103 @@ class JazzPageViewState extends State<JazzPageView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Jazz Page'),
-      ),
+      appBar: AppBar(title: const Text('Jazz Page')),
       body: Center(
         child: songs.isEmpty
-            ? const CircularProgressIndicator() // Show loading indicator while songs load.
+            ? const CircularProgressIndicator()
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Dropdown menu to select a song from the database.
+                  // Song Selection Dropdown
                   UnconstrainedBox(
                     child: Container(
                       width: 200,
-                      alignment: Alignment.center,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(5)),
                       ),
-                      child: DropdownMenu(
+                      child: DropdownMenu<String>(
                         enableSearch: true,
+                        menuHeight: 200,
                         menuStyle: MenuStyle(
                           backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
                         ),
                         label: const Text("Song Select"),
                         width: 200,
                         onSelected: (String? newValue) {
-                          setState(() {
-                            selectedSong = newValue!;
-                          });
+                          if (newValue != null) {
+                            setState(() {
+                              selectedSong = newValue;
+                            });
+                            _updateKeyForSelectedSong(newValue);
+                          }
                         },
                         dropdownMenuEntries: songs
-                            .map((song) => DropdownMenuEntry(value: song, label: song))
+                            .map((song) => DropdownMenuEntry<String>(value: song, label: song))
                             .toList(),
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Dropdown for key selection.
+
+                  // Key Selection Dropdown
                   UnconstrainedBox(
                     child: Container(
                       width: 200,
-                      alignment: Alignment.center,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.all(Radius.circular(5)),
                       ),
-                      child: DropdownMenu(
+                      child: DropdownMenu<String>(
                         enableSearch: true,
+                        menuHeight: 200,
                         menuStyle: MenuStyle(
                           backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
                         ),
                         label: const Text("Key"),
                         width: 200,
-                        onSelected: (String? newValue) {
-                          setState(() {
-                            selectedKey = newValue!;
-                          });
-                        },
+                        onSelected: selectedKey != null
+                            ? (String? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    selectedKey = newValue;
+                                  });
+                                }
+                              }
+                            : null,
                         dropdownMenuEntries: keys
-                            .map((key) => DropdownMenuEntry(value: key, label: key))
+                            .map((key) => DropdownMenuEntry<String>(value: key, label: key))
                             .toList(),
+                        enabled: selectedKey != null,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
+
+                  // Flat & Sharp Key Toggle Checkboxes
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Checkbox(
+                        value: useFlatKeys,
+                        onChanged: (value) => _toggleFlatKeys(value!),
+                      ),
+                      const Text("Use Flat Keys (♭)"),
+                      const SizedBox(width: 10),
+                      Checkbox(
+                        value: useSharpKeys,
+                        onChanged: (value) => _toggleSharpKeys(value!),
+                      ),
+                      const Text("Use Sharp Keys (♯)"),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
                   Text("BPM: ${bpm.toInt()}"),
                   UnconstrainedBox(
                     child: Slider(
-                      min: 0,
-                      max: 140,
+                      min: 40,
+                      max: 200,
                       value: bpm,
                       onChanged: (value) {
                         setState(() {
@@ -120,19 +195,25 @@ class JazzPageViewState extends State<JazzPageView> {
                     ),
                   ),
                   const SizedBox(height: 20),
+
+                  // Continue Button - Pass `useFlatKeys` to `JazzQuizView`
                   ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => JazzQuizView(
-                            songName: selectedSong,
-                            bpm: bpm.toInt(),
-                            songKey: selectedKey,
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: (selectedSong != null && selectedKey != null)
+                        ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => JazzQuizView(
+                                  songName: selectedSong!,
+                                  bpm: bpm.toInt(),
+                                  songKey: selectedKey!,
+                                  isSharpKey: useSharpKeys,
+                                  isFlatKey: useFlatKeys,
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
                     child: const Text('Continue'),
                   ),
                 ],

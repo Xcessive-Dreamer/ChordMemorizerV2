@@ -4,3 +4,4 @@ TODO:
 - Add UI element to show what section of song you are in A section, b section, verse, chorus etc.
 - add all options for key logic for the song, double check transposition login
 - AI for predicting chord changes
+- implement key logic for db

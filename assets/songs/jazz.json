@@ -2,6 +2,7 @@
     {
       "name": "Autumn Leaves",
       "genre": "jazz",
+      "key": "Em",
       "chords": [
         { "original": "Am7", "duration": 4 },
         { "original": "D7", "duration": 4 },
@@ -45,6 +46,7 @@
     {
       "name": "Misty",
       "genre": "jazz",
+      "key": "Eb",
       "chords": [
         { "original": "EbMaj7", "duration": 4 },
         { "original": "Bbm7", "duration": 2 },
@@ -55,6 +57,7 @@
     {
       "name": "1-6-2-5-1",
       "genre":"jazz",
+      "key": "C",
       "chords": [
         { "original": "CMaj7", "duration": 2 },
         { "original": "Am7", "duration": 2 },
@@ -67,6 +70,7 @@
     {
       "name": "Jazz Blues",
       "genre":"jazz",
+      "key":"Cm",
       "chords": [
         { "original": "C7", "duration": 4 },
         { "original": "F7", "duration": 4 },

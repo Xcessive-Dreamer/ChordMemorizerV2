@@ -175,7 +175,7 @@ class ContentViewBodyState extends State<ContentViewBody> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const AddOwnPageView()),
+                        builder: (context) => const AddYourOwnPageView()),
                   );
                 }, context, textColor),
                 const SizedBox(height: 10),

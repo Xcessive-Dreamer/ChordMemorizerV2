@@ -69,7 +69,6 @@ class Metronome {
     if (isSongMode) {
         audioPlayer.play(AssetSource(soundURL));
     }    
-    // Add slight delay upon start to better match audio recordings
     
       tick(); // Immediately emit the first tick
       metronomeTimer = Timer.periodic(Duration(milliseconds: (interval * 1000).round()), (timer) {

@@ -37,7 +37,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         genre TEXT NOT NULL,
-        key TEXT NOT NULL,  
+        key TEXT NOT NULL 
       )
     ''');
 
@@ -71,6 +71,7 @@ class DatabaseHelper {
 
         for (var songData in jsonData) {
           String genre = songData["genre"];
+          String key = songData["key"];
 
           Song song = Song(
             songData["name"],
@@ -80,10 +81,11 @@ class DatabaseHelper {
                 [],
                 chord["duration"]
               );
-            }).toList()
+            }).toList(), 
+            songData["key"],
           );
 
-          await insertSong(song, genre);
+          await insertSong(song, genre, key);
         }
 
         debugPrint("✅ Loaded ${jsonData.length} songs from $genreFile.json!");
@@ -93,11 +95,12 @@ class DatabaseHelper {
     }
   }
 
-  Future<int> insertSong(Song song, String genre) async {
+  Future<int> insertSong(Song song, String genre, String key) async {
     final db = await instance.database;
     int songId = await db.insert('songs', {
       'name': song.name,
-      'genre': genre  
+      'genre': genre,
+      'key': key,
     });
 
     for (var chord in song.chordChanges) {
@@ -147,37 +150,39 @@ class DatabaseHelper {
     }).toList();
 
     debugPrint("✅ Found song '${songRow['name']}' in database.");
-    return Song(songRow['name'] as String, chordChanges);
+    return (Song(songRow['name'] as String, chordChanges, songRow['key'] as String));
   }
 
   Future<List<Song>> getSongsByGenre(String genre) async {
-    final db = await instance.database;
-    final songData = await db.query(
-      'songs',
-      where: 'genre = ?',
-      whereArgs: [genre],
+  final db = await instance.database;
+  final songData = await db.query(
+    'songs',
+    where: 'genre = ?',
+    whereArgs: [genre],
+  );
+
+  List<Song> songs = [];
+  for (var songRow in songData) {
+    final chordData = await db.query(
+      'chord_changes',
+      where: 'song_id = ?',
+      whereArgs: [songRow['id']],
     );
 
-    List<Song> songs = [];
-    for (var songRow in songData) {
-      final chordData = await db.query(
-        'chord_changes',
-        where: 'song_id = ?',
-        whereArgs: [songRow['id']],
+    List<ChordChange> chordChanges = chordData.map((map) {
+      return ChordChange(
+        map['original_chord'] as String,
+        [],
+        map['duration'] as int,
       );
+    }).toList();
 
-      List<ChordChange> chordChanges = chordData.map((map) {
-        return ChordChange(
-          map['original_chord'] as String,
-          [],
-          map['duration'] as int,
-        );
-      }).toList();
-
-      songs.add(Song(songRow['name'] as String, chordChanges));
-    }
-    return songs;
+    // ✅ Include `key` from the database
+    songs.add(Song(songRow['name'] as String, chordChanges, songRow['key'] as String));
   }
+  return songs;
+}
+
 
   Future<void> deleteAll() async {
     final db = await instance.database;
