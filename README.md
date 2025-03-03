@@ -1,7 +1,1 @@
-TODO:
-
-- Add a small UI displaying the chord progression as it goes on and then clears after you reach the end of first chorus.
-- Add UI element to show what section of song you are in A section, b section, verse, chorus etc.
-- add all options for key logic for the song, double check transposition login
-- AI for predicting chord changes
-- implement key logic for db
+Chord Memorizer is a music educational tool for musicians to practice on the go. Quiz yourself on popular songs in many different genres or write your own chord progressions and send them to your friends.

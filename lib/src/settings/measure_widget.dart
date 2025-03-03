@@ -70,7 +70,7 @@ class _MeasureWidgetState extends State<MeasureWidget> {
         // Single chord input (Default 4 beats)
         if (!isSplit)
           Positioned(
-            top: -20,
+            top: -17,
             left: 0,
             right: 0,
             child: Center(
