@@ -26,7 +26,17 @@ class MeasureWidget extends StatefulWidget {
 }
 
 class _MeasureWidgetState extends State<MeasureWidget> {
-  bool isSplit = false; // Default to 4 beats (one chord per measure)
+  bool isSplit = false; // Default: 4 beats (one chord per measure)
+
+  void _toggleChordDuration() {
+    setState(() {
+      if (isSplit) {
+        // Switching back to 4 beats: Keep only first chord, clear second one.
+        widget.chordController2.clear();
+      }
+      isSplit = !isSplit;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,17 +48,13 @@ class _MeasureWidgetState extends State<MeasureWidget> {
           size: Size(widget.width, widget.height),
         ),
 
-        // Toggle for Chord Duration (Only show if toggle is enabled)
+        // Toggle for Chord Duration (Only if showDurationToggle is ON)
         if (widget.showDurationToggle)
           Positioned(
             bottom: 5,
             left: widget.width * 0.2,
             child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  isSplit = !isSplit; // Toggle between 4 beats and 2 beats
-                });
-              },
+              onTap: _toggleChordDuration,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
