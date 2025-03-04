@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'measure_painter.dart';
 import '../settings/chord_text.dart';
+import '../settings/chord_editor_overlay.dart'; // Make sure this file exists and implements your overlay.
 
 class MeasureWidget extends StatefulWidget {
   final TextEditingController chordController1;
@@ -11,8 +12,8 @@ class MeasureWidget extends StatefulWidget {
   final bool showDurationToggle;
   final bool showBorders;
   final VoidCallback onDelete;
-  // Updated onFocus callback now passes both the controller and its FocusNode.
-  final Function(TextEditingController, FocusNode) onFocus;
+  // Updated onFocus callback now only passes the active controller.
+  final Function(TextEditingController) onFocus;
 
   const MeasureWidget({
     super.key,
@@ -33,39 +34,6 @@ class MeasureWidget extends StatefulWidget {
 
 class _MeasureWidgetState extends State<MeasureWidget> {
   bool isSplit = false; // Default: 4 beats (one chord per measure)
-  // Flags to track whether each chord field is in editing mode.
-  bool _editingChord1 = true;
-  bool _editingChord2 = true;
-
-  // Initialize FocusNodes immediately.
-  final FocusNode _focusNode1 = FocusNode();
-  final FocusNode _focusNode2 = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode1.addListener(() {
-      if (!_focusNode1.hasFocus && widget.chordController1.text.isNotEmpty) {
-        setState(() {
-          _editingChord1 = false;
-        });
-      }
-    });
-    _focusNode2.addListener(() {
-      if (!_focusNode2.hasFocus && widget.chordController2.text.isNotEmpty) {
-        setState(() {
-          _editingChord2 = false;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _focusNode1.dispose();
-    _focusNode2.dispose();
-    super.dispose();
-  }
 
   void _toggleChordDuration() {
     setState(() {
@@ -76,23 +44,9 @@ class _MeasureWidgetState extends State<MeasureWidget> {
     });
   }
 
-  // Build InputDecoration that respects showBorders flag.
+  // A helper method to build a consistent InputDecoration (used here only to draw a border).
   InputDecoration _buildInputDecoration() {
     return InputDecoration(
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: BorderSide(
-          color: widget.showBorders ? Colors.white : Colors.transparent,
-          width: 1,
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: BorderSide(
-          color: widget.showBorders ? Colors.white : Colors.transparent,
-          width: 1,
-        ),
-      ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(5),
         borderSide: BorderSide(
@@ -104,62 +58,58 @@ class _MeasureWidgetState extends State<MeasureWidget> {
     );
   }
 
-  // Builds a chord editor which toggles between a TextField and a formatted ChordText.
-  Widget _buildChordEditor(
-    TextEditingController controller,
-    bool isEditing,
-    FocusNode focusNode,
-    VoidCallback onTap,
-    VoidCallback onEditingComplete,
-  ) {
-    if (isEditing) {
-      return TextField(
-        controller: controller,
-        focusNode: focusNode,
-        onEditingComplete: () {
-          if (controller.text.isNotEmpty) {
-            setState(() {
-              if (controller == widget.chordController1) {
-                _editingChord1 = false;
-              } else {
-                _editingChord2 = false;
-              }
-            });
-          }
-          onEditingComplete();
-        },
-        onSubmitted: (_) {
-          if (controller.text.isNotEmpty) {
-            setState(() {
-              if (controller == widget.chordController1) {
-                _editingChord1 = false;
-              } else {
-                _editingChord2 = false;
-              }
-            });
-          }
-          onEditingComplete();
-        },
-        onTap: onTap,
-        decoration: _buildInputDecoration(),
-        textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white),
+  // Instead of inline editing, this builds a widget that displays the chord
+  // (using your ChordText widget) and, when tapped, opens a full‑screen overlay.
+  Widget _buildChordEditor(TextEditingController controller) {
+    return GestureDetector(
+      onTap: () async {
+        // Notify parent of active field (if needed)
+        widget.onFocus(controller);
+        // Open the full-screen chord editor overlay.
+        // The overlay should return the new chord text (or null if canceled).
+        String? newChord = await Navigator.of(context).push(
+  PageRouteBuilder(
+    opaque: false, // This makes the route transparent.
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return ChordEditorOverlay(
+        initialChord: controller.text,
+        chordSymbols: const [
+          "△", "°", "Ø", "♯", "♭", "sus", "add9", "6", "7", "9", "11", "13"
+        ],
       );
-    } else {
-      return GestureDetector(
-        onTap: onTap,
-        child: Container(
-          alignment: Alignment.center,
-          child: ChordText(chord: controller.text),
+    },
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(
+        opacity: animation,
+        child: child,
+      );
+    },
+  ),
+);
+
+        if (newChord != null) {
+          setState(() {
+            controller.text = newChord;
+          });
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(
+              color: widget.showBorders ? Colors.white : Colors.transparent, width: 1),
         ),
-      );
-    }
+        alignment: Alignment.center,
+        // Display the chord using your formatted ChordText widget.
+        child: ChordText(chord: controller.text),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10), // Adds space between rows
+      padding: const EdgeInsets.symmetric(vertical: 10), // Adds space between rows.
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -168,7 +118,6 @@ class _MeasureWidgetState extends State<MeasureWidget> {
             painter: MeasurePainter(),
             size: Size(widget.width, widget.height),
           ),
-
           // Toggle for Chord Duration (if enabled).
           if (widget.showDurationToggle)
             Positioned(
@@ -187,78 +136,41 @@ class _MeasureWidgetState extends State<MeasureWidget> {
                 ),
               ),
             ),
-
           // Single chord input (Default 4 beats).
           if (!isSplit)
             Positioned(
               top: -15,
-              left: 0,
+              left: -35,
               right: 0,
               child: Center(
                 child: SizedBox(
                   height: widget.height * 0.4,
-                  width: widget.width * 0.4,
-                  child: _buildChordEditor(
-                    widget.chordController1,
-                    _editingChord1,
-                    _focusNode1,
-                    () {
-                      setState(() {
-                        _editingChord1 = true;
-                      });
-                      // Pass both controller and FocusNode to parent.
-                      widget.onFocus(widget.chordController1, _focusNode1);
-                    },
-                    () {},
-                  ),
+                  width: widget.width * 0.6,
+                  child: _buildChordEditor(widget.chordController1),
                 ),
               ),
             ),
-
           // Two chord inputs (2 beats per chord).
           if (isSplit) ...[
             Positioned(
               top: -15,
-              left: widget.width * 0.1,
+              left: widget.width * 0.01,
               child: SizedBox(
                 height: widget.height * 0.4,
-                width: widget.width * 0.4,
-                child: _buildChordEditor(
-                  widget.chordController1,
-                  _editingChord1,
-                  _focusNode1,
-                  () {
-                    setState(() {
-                      _editingChord1 = true;
-                    });
-                    widget.onFocus(widget.chordController1, _focusNode1);
-                  },
-                  () {},
-                ),
+                width: widget.width * 0.5,
+                child: _buildChordEditor(widget.chordController1),
               ),
             ),
             Positioned(
               top: -15,
-              right: widget.width * 0.1,
+              right: widget.width * -0.02,
               child: SizedBox(
                 height: widget.height * 0.4,
-                width: widget.width * 0.4,
-                child: _buildChordEditor(
-                  widget.chordController2,
-                  _editingChord2,
-                  _focusNode2,
-                  () {
-                    setState(() {
-                      _editingChord2 = true;
-                    });
-                    widget.onFocus(widget.chordController2, _focusNode2);
-                  },
-                  () {},
-                ),
+                width: widget.width * 0.5,
+                child: _buildChordEditor(widget.chordController2),
               ),
             ),
           ],
-
           // Delete Button.
           if (widget.showDelete)
             Positioned(

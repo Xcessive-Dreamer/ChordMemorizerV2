@@ -15,9 +15,8 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
   bool showBorders = true;
   bool showDurationToggle = true; // Toggle for showing the white box UI
   TextEditingController? activeController; // Tracks the currently active input field
-  FocusNode? activeFocusNode; // Tracks the FocusNode of the active field
 
-  // List of common chord symbols
+  // List of common chord symbols (used elsewhere, e.g., in an overlay)
   final List<String> chordSymbols = [
     "△",
     "°",
@@ -91,26 +90,6 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
     });
   }
 
-  /// Inserts the selected symbol into the currently active chord input field
-  /// and re-requests focus so the field stays in editing mode.
-  void _insertChordSymbol(String symbol) {
-    if (activeController != null) {
-      final cursorPosition = activeController!.selection.baseOffset;
-      final text = activeController!.text;
-      final newText = text.substring(0, cursorPosition) +
-          symbol +
-          text.substring(cursorPosition);
-
-      setState(() {
-        activeController!.text = newText;
-        activeController!.selection =
-            TextSelection.collapsed(offset: cursorPosition + symbol.length);
-      });
-      // Re-request focus to keep the field in editing mode.
-      activeFocusNode?.requestFocus();
-    }
-  }
-
   void _displayInfo() {
     showDialog(
       context: context,
@@ -167,21 +146,21 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
                     const SizedBox(width: 10),
                     IconButton(
                       icon: Icon(
-                          showDurationToggle
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          size: 30),
+                        showDurationToggle
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        size: 30,
+                      ),
                       tooltip: "Toggle Duration Selector",
                       onPressed: _toggleChordDurationUI,
                     ),
                     const SizedBox(width: 10),
                     IconButton(
                       icon: Icon(
-                          showDelete
-                              ? Icons.delete_forever
-                              : Icons.delete_outline,
-                          size: 30,
-                          color: showDelete ? Colors.red : null),
+                        showDelete ? Icons.delete_forever : Icons.delete_outline,
+                        size: 30,
+                        color: showDelete ? Colors.red : null,
+                      ),
                       tooltip: "Toggle Delete",
                       onPressed: _toggleDelete,
                     ),
@@ -196,23 +175,6 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
                       ),
                       tooltip: "Toggle Chord Borders",
                       onPressed: _toggleBorders,
-                    ),
-                    const SizedBox(width: 10),
-                    // Chord Symbol Dropdown.
-                    DropdownButton<String>(
-                      hint: const Text("Symbols"),
-                      items: chordSymbols.map((String symbol) {
-                        return DropdownMenuItem<String>(
-                          value: symbol,
-                          child: Text(symbol,
-                              style: const TextStyle(fontSize: 20)),
-                        );
-                      }).toList(),
-                      onChanged: (symbol) {
-                        if (symbol != null) {
-                          _insertChordSymbol(symbol);
-                        }
-                      },
                     ),
                   ],
                 ),
@@ -235,11 +197,10 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
                           showDelete: showDelete,
                           showDurationToggle: showDurationToggle,
                           onDelete: () => _deleteMeasure(index),
-                          // Update onFocus to capture both the active controller and its FocusNode.
-                          onFocus: (controller, focusNode) {
+                          // Updated onFocus callback: only pass the controller.
+                          onFocus: (controller) {
                             setState(() {
                               activeController = controller;
-                              activeFocusNode = focusNode;
                             });
                           },
                         );
