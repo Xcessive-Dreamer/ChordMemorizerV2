@@ -14,6 +14,7 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
   bool showDelete = false; // Toggle delete button visibility
   bool showBorders = true;
   bool showDurationToggle = true; // Toggle for showing the white box UI
+  var showTitleBorder = true;
   TextEditingController? activeController; // Tracks the currently active input field
 
   // List of common chord symbols (used elsewhere, e.g., in an overlay)
@@ -95,7 +96,17 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("How to Use"),
-        content: const Text("Instructions on how to use this feature..."),
+        // explain toggle delete, toggle borders, toggle duration UI
+
+        content: const Text(""
+            "1. Add Measure: Click the '+' button to add a new measure.\n"
+            "2. Delete Measure: Click the 'Delete' button to toggle delete mode. Then, click the 'X' on any measure to remove it.\n"
+            "3. Toggle Borders: Click the 'Borders' button to show/hide input borders for chords.\n"
+            "4. Toggle Duration UI: Click the 'Duration' button to show/hide the chord durations,\n"
+            "simply click the white box to toggle between 2 and 4 beat chords\n"
+            "5. Save Lead Sheet: Click the 'Save' button to print the current lead sheet to the console.\n"
+            "6. Song Title: Enter the song title in the text field above the measures."
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -110,7 +121,7 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Your Own Lead Sheet"),
+        title: const Text(""),
         actions: [
           IconButton(
             icon: const Icon(Icons.save, size: 30, color: Colors.green),
@@ -130,6 +141,7 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
           int measuresPerRow = 4;
           double measureWidth = availableWidth / measuresPerRow;
 
+          
           return Column(
             children: [
               // Toolbar Section (buttons below AppBar)
@@ -177,6 +189,37 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
                       onPressed: _toggleBorders,
                     ),
                   ],
+                ),
+              ),
+              // add input for song title above icon buttons and center horizontally with a 
+              // when user taps enter remove border to match song typical display
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 250, // Adjust width as needed
+                    child: TextField(
+                      decoration: InputDecoration(
+                        labelText: "Song Title",
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        border: showTitleBorder ? const OutlineInputBorder() : InputBorder.none,
+                      ),
+                      onTap: () {
+                        setState(() {
+                          showTitleBorder = true; // Show border when the text field is clicked
+                        });
+                      },
+                      onSubmitted: (value) {
+                        FocusScope.of(context).unfocus();
+                        setState(() {
+                          showTitleBorder = false; // Remove border when user hits enter
+                          
+                        });
+                      },
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
                 ),
               ),
               // Measures Section (Scrollable)
