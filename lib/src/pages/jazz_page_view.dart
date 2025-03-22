@@ -107,10 +107,11 @@ class JazzPageViewState extends State<JazzPageView> {
                       child: DropdownMenu<String>(
                         enableSearch: true,
                         menuHeight: 200,
-                        menuStyle: MenuStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                        menuStyle: const MenuStyle(
+                          backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
                         ),
-                        label: const Text("Song Select"),
+                        textStyle: const TextStyle(color: Colors.black),
+                        label: const Text("Song Select", style: TextStyle(color: Colors.black)),
                         width: 200,
                         onSelected: (String? newValue) {
                           if (newValue != null) {
@@ -121,7 +122,13 @@ class JazzPageViewState extends State<JazzPageView> {
                           }
                         },
                         dropdownMenuEntries: songs
-                            .map((song) => DropdownMenuEntry<String>(value: song, label: song))
+                            .map((song) => DropdownMenuEntry<String>(
+                                  value: song,
+                                  label: song,
+                                  style: const ButtonStyle(
+                                    foregroundColor: MaterialStatePropertyAll<Color>(Colors.black),
+                                  ),
+                                ))
                             .toList(),
                       ),
                     ),
@@ -139,10 +146,11 @@ class JazzPageViewState extends State<JazzPageView> {
                       child: DropdownMenu<String>(
                         enableSearch: true,
                         menuHeight: 200,
-                        menuStyle: MenuStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                        menuStyle: const MenuStyle(
+                          backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
                         ),
-                        label: const Text("Key"),
+                        textStyle: const TextStyle(color: Colors.black),
+                        label: const Text("Key", style: TextStyle(color: Colors.black)),
                         width: 200,
                         onSelected: selectedKey != null
                             ? (String? newValue) {
@@ -154,7 +162,13 @@ class JazzPageViewState extends State<JazzPageView> {
                               }
                             : null,
                         dropdownMenuEntries: keys
-                            .map((key) => DropdownMenuEntry<String>(value: key, label: key))
+                            .map((key) => DropdownMenuEntry<String>(
+                                  value: key,
+                                  label: key,
+                                  style: const ButtonStyle(
+                                    foregroundColor: MaterialStatePropertyAll<Color>(Colors.black),
+                                  ),
+                                ))
                             .toList(),
                         enabled: selectedKey != null,
                       ),

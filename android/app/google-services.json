@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "255419886147",
+    "project_id": "chord-memorizer",
+    "storage_bucket": "chord-memorizer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:255419886147:android:61ade3c7a7f42f15ff82f6",
+        "android_client_info": {
+          "package_name": "com.example.chord_memorizer_cp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvuw5cj1fNHSXXlek1KctdAr5li7bOtnw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
