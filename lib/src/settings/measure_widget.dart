@@ -14,6 +14,7 @@ class MeasureWidget extends StatefulWidget {
   final VoidCallback onDelete;
   // Updated onFocus callback now only passes the active controller.
   final Function(TextEditingController) onFocus;
+  final bool initialIsSplit;
 
   const MeasureWidget({
     super.key,
@@ -26,6 +27,7 @@ class MeasureWidget extends StatefulWidget {
     required this.showDurationToggle,
     required this.onDelete,
     required this.onFocus,
+    this.initialIsSplit = false,
   });
 
   @override
@@ -33,7 +35,23 @@ class MeasureWidget extends StatefulWidget {
 }
 
 class _MeasureWidgetState extends State<MeasureWidget> {
-  bool isSplit = false; // Default: 4 beats (one chord per measure)
+  late bool isSplit;
+
+  @override
+  void initState() {
+    super.initState();
+    isSplit = widget.initialIsSplit;
+  }
+
+  @override
+  void didUpdateWidget(MeasureWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIsSplit != widget.initialIsSplit) {
+      setState(() {
+        isSplit = widget.initialIsSplit;
+      });
+    }
+  }
 
   void _toggleChordDuration() {
     setState(() {

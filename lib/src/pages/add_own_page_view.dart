@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
 import '../settings/measure_widget.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import '../services/firebase_service.dart';
+import '../models/quiz_model.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'user_songs_page_view.dart';
+
 
 class AddYourOwnPage extends StatefulWidget {
-  const AddYourOwnPage({super.key});
+  final Map<String, dynamic>? songToEdit;
+
+  const AddYourOwnPage({
+    super.key,
+    this.songToEdit,
+  });
 
   @override
-  _AddYourOwnPageState createState() => _AddYourOwnPageState();
+  AddYourOwnPageState createState() => AddYourOwnPageState();
 }
 
-class _AddYourOwnPageState extends State<AddYourOwnPage> {
+class AddYourOwnPageState extends State<AddYourOwnPage> {
+  final TextEditingController _titleController = TextEditingController();
   final List<TextEditingController> measureControllers1 = [];
   final List<TextEditingController> measureControllers2 = [];
   bool showDelete = false; // Toggle delete button visibility
@@ -16,6 +32,11 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
   bool showDurationToggle = true; // Toggle for showing the white box UI
   var showTitleBorder = true;
   TextEditingController? activeController; // Tracks the currently active input field
+  String selectedKey = "C"; // Default key
+  final List<String> keys = [
+    "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B",
+    "Cm", "C#m", "Dbm", "Dm", "D#m", "Ebm", "Em", "Fm", "F#m", "Gbm", "Gm", "G#m", "Abm", "Am", "A#m", "Bbm", "Bm"
+  ];
 
   // List of common chord symbols (used elsewhere, e.g., in an overlay)
   final List<String> chordSymbols = [
@@ -36,15 +57,69 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
   @override
   void initState() {
     super.initState();
-    // Start with 4 measures.
-    for (int i = 0; i < 4; i++) {
-      measureControllers1.add(TextEditingController());
-      measureControllers2.add(TextEditingController());
+    if (widget.songToEdit != null) {
+      // Populate the form with the song to edit
+      _titleController.text = widget.songToEdit!['name'];
+      selectedKey = widget.songToEdit!['key'];
+      
+      // Calculate how many measures we need
+      int totalBeats = 0;
+      for (var chord in widget.songToEdit!['chords']) {
+        totalBeats += chord['duration'] as int;
+      }
+      int numMeasures = (totalBeats / 4).ceil();
+
+      // Initialize empty measures
+      for (int i = 0; i < numMeasures; i++) {
+        measureControllers1.add(TextEditingController());
+        measureControllers2.add(TextEditingController());
+      }
+
+      // Track which measures should be split
+      List<bool> shouldSplitMeasures = List.filled(numMeasures, false);
+      
+      int currentMeasure = 0;
+      int i = 0;
+      
+      while (i < widget.songToEdit!['chords'].length) {
+        var chord = widget.songToEdit!['chords'][i];
+        
+        if (chord['duration'] == 4) {
+          // 4-beat chord goes in the first controller
+          measureControllers1[currentMeasure].text = chord['original'];
+          measureControllers2[currentMeasure].text = '';
+          currentMeasure++;
+          i++;
+        } else if (chord['duration'] == 2) {
+          // For 2-beat chords, we need two chords per measure
+          shouldSplitMeasures[currentMeasure] = true;
+          // First 2-beat chord goes in controller1
+          measureControllers1[currentMeasure].text = chord['original'];
+          // Second 2-beat chord goes in controller2
+          if (i + 1 < widget.songToEdit!['chords'].length) {
+            measureControllers2[currentMeasure].text = widget.songToEdit!['chords'][i + 1]['original'];
+            i += 2; // Move to next pair of 2-beat chords
+          } else {
+            i++; // Move to next chord if no pair exists
+          }
+          currentMeasure++;
+        }
+      }
+
+      // Store the split measures state
+      splitMeasures = shouldSplitMeasures;
+    } else {
+      // Start with 4 measures for new songs
+      for (int i = 0; i < 4; i++) {
+        measureControllers1.add(TextEditingController());
+        measureControllers2.add(TextEditingController());
+      }
     }
   }
 
   @override
   void dispose() {
+    _titleController.dispose();
     for (var controller in [...measureControllers1, ...measureControllers2]) {
       controller.dispose();
     }
@@ -67,9 +142,306 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
     });
   }
 
-  void _saveLeadSheet() {
-    for (int i = 0; i < measureControllers1.length; i++) {
-      debugPrint("Measure ${i + 1}: ${measureControllers1[i].text} ${measureControllers2[i].text}");
+  void _saveLeadSheet() async {
+    if (!mounted) return;
+    
+    try {
+      // Get the song title
+      String title = _titleController.text.trim();
+      if (title.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a song title')),
+        );
+        return;
+      }
+
+      // Create the list of chords
+      List<Map<String, dynamic>> chords = [];
+      
+      for (int i = 0; i < measureControllers1.length; i++) {
+        String chord1 = measureControllers1[i].text.trim();
+        String chord2 = measureControllers2[i].text.trim();
+        
+        // If both chords are empty, skip this measure
+        if (chord1.isEmpty && chord2.isEmpty) continue;
+        
+        // If only first chord exists, it's a 4-beat chord
+        if (chord1.isNotEmpty && chord2.isEmpty) {
+          chords.add({
+            "original": chord1,
+            "duration": 4
+          });
+          continue;
+        }
+        
+        // If both chords exist, they're 2-beat chords
+        if (chord1.isNotEmpty) {
+          chords.add({
+            "original": chord1,
+            "duration": 2
+          });
+        }
+        if (chord2.isNotEmpty) {
+          chords.add({
+            "original": chord2,
+            "duration": 2
+          });
+        }
+      }
+
+      if (chords.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please add at least one chord')),
+        );
+        return;
+      }
+
+      // Create the song object
+      Map<String, dynamic> song = {
+        "name": title,
+        "genre": "user",
+        "key": selectedKey,
+        "chords": chords
+      };
+
+      // Save to local storage
+      try {
+        final directory = await getApplicationDocumentsDirectory();
+        final file = File('${directory.path}/user_songs.json');
+        debugPrint('Attempting to read from: ${file.path}');
+        
+        List<dynamic> existingSongs = [];
+        if (await file.exists()) {
+          String content = await file.readAsString();
+          if (content.isNotEmpty) {
+            existingSongs = json.decode(content);
+          }
+        }
+
+        existingSongs.add(song);
+        debugPrint('Song added to local storage. Total songs: ${existingSongs.length}');
+
+        await file.writeAsString(json.encode(existingSongs));
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Song saved locally!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        debugPrint('Error saving to local storage: $e');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving locally: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
+
+  void _uploadToFirebase() async {
+    if (!mounted) return;
+    
+    try {
+      // Get the song title
+      String title = _titleController.text.trim();
+      if (title.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a song title')),
+        );
+        return;
+      }
+
+      // Create the list of chords
+      List<Map<String, dynamic>> chords = [];
+      
+      for (int i = 0; i < measureControllers1.length; i++) {
+        String chord1 = measureControllers1[i].text.trim();
+        String chord2 = measureControllers2[i].text.trim();
+        
+        // If both chords are empty, skip this measure
+        if (chord1.isEmpty && chord2.isEmpty) continue;
+        
+        // If only first chord exists, it's a 4-beat chord
+        if (chord1.isNotEmpty && chord2.isEmpty) {
+          chords.add({
+            "original": chord1,
+            "duration": 4
+          });
+          continue;
+        }
+        
+        // If both chords exist, they're 2-beat chords
+        if (chord1.isNotEmpty) {
+          chords.add({
+            "original": chord1,
+            "duration": 2
+          });
+        }
+        if (chord2.isNotEmpty) {
+          chords.add({
+            "original": chord2,
+            "duration": 2
+          });
+        }
+      }
+
+      if (chords.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please add at least one chord')),
+        );
+        return;
+      }
+
+      // Show confirmation dialog
+      bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Upload to Firebase'),
+          content: const Text('Are you sure you want to upload this song to Firebase? This will make it available for sharing.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Upload'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return;
+
+      // Upload to Firebase
+      try {
+        final firebaseService = FirebaseService();
+        final chordChanges = chords.map((chord) => 
+          ChordChange(
+            chord['original'],
+            [], // Options will be generated at runtime
+            chord['duration'],
+          )
+        ).toList();
+
+        final songObject = Song(title, chordChanges, selectedKey);
+        final shareCode = await firebaseService.saveSong(songObject, "user");
+        
+        // Save to local storage after successful Firebase upload
+        try {
+          final directory = await getApplicationDocumentsDirectory();
+          final file = File('${directory.path}/user_songs.json');
+          
+          List<dynamic> existingSongs = [];
+          if (await file.exists()) {
+            String content = await file.readAsString();
+            if (content.isNotEmpty) {
+              existingSongs = json.decode(content);
+            }
+          }
+
+          // Create the song object for local storage
+          Map<String, dynamic> songToSave = {
+            "name": title,
+            "genre": "user",
+            "key": selectedKey,
+            "shareCode": shareCode,
+            "chords": chords,
+          };
+
+          existingSongs.add(songToSave);
+          await file.writeAsString(json.encode(existingSongs));
+        } catch (e) {
+          debugPrint('Error saving uploaded song to local storage: $e');
+        }
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Song uploaded successfully!',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Share Code: $shareCode',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: shareCode));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Share code copied to clipboard'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Copy Share Code'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const UserSongsPageView(),
+                          ),
+                        );
+                      },
+                      child: const Text('View Your Songs'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        debugPrint('Error uploading to Firebase: $e');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading to Firebase: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     }
   }
 
@@ -117,6 +489,161 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
     );
   }
 
+  void _importSong() async {
+    final TextEditingController shareCodeController = TextEditingController();
+    final scaffoldContext = context; // Store the main Scaffold context
+    
+    return showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Import Song'),
+        content: TextField(
+          controller: shareCodeController,
+          decoration: const InputDecoration(
+            labelText: 'Enter Share Code',
+            hintText: 'Paste the share code here',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final shareCode = shareCodeController.text.trim();
+              if (shareCode.isEmpty) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  const SnackBar(content: Text('Please enter a share code')),
+                );
+                return;
+              }
+
+              // Close the dialog immediately
+              Navigator.of(dialogContext).pop();
+
+              try {
+                final firebaseService = FirebaseService();
+                final song = await firebaseService.getSongByShareCode(shareCode);
+                
+                if (song == null) {
+                  ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                    const SnackBar(content: Text('Song not found')),
+                  );
+                  return;
+                }
+
+                // Populate the form with the imported song
+                setState(() {
+                  _titleController.text = song.name;
+                  selectedKey = song.key;
+                  
+                  // Clear existing measures
+                  for (var controller in [...measureControllers1, ...measureControllers2]) {
+                    controller.dispose();
+                  }
+                  measureControllers1.clear();
+                  measureControllers2.clear();
+
+                  // Calculate how many measures we need
+                  int totalBeats = 0;
+                  for (var chord in song.chordChanges) {
+                    totalBeats += chord.durationInBeats;
+                  }
+                  int numMeasures = (totalBeats / 4).ceil();
+
+                  // Initialize empty measures
+                  for (int i = 0; i < numMeasures; i++) {
+                    measureControllers1.add(TextEditingController());
+                    measureControllers2.add(TextEditingController());
+                  }
+
+                  // Track which measures should be split
+                  List<bool> shouldSplitMeasures = List.filled(numMeasures, false);
+                  
+                  int currentMeasure = 0;
+                  int i = 0;
+                  
+                  while (i < song.chordChanges.length) {
+                    var chord = song.chordChanges[i];
+                    
+                    if (chord.durationInBeats == 4) {
+                      // 4-beat chord goes in the first controller
+                      measureControllers1[currentMeasure].text = chord.originalChord;
+                      measureControllers2[currentMeasure].text = '';
+                      currentMeasure++;
+                      i++;
+                    } else if (chord.durationInBeats == 2) {
+                      // For 2-beat chords, we need two chords per measure
+                      shouldSplitMeasures[currentMeasure] = true;
+                      // First 2-beat chord goes in controller1
+                      measureControllers1[currentMeasure].text = chord.originalChord;
+                      // Second 2-beat chord goes in controller2
+                      if (i + 1 < song.chordChanges.length) {
+                        measureControllers2[currentMeasure].text = song.chordChanges[i + 1].originalChord;
+                        i += 2; // Move to next pair of 2-beat chords
+                      } else {
+                        i++; // Move to next chord if no pair exists
+                      }
+                      currentMeasure++;
+                    }
+                  }
+
+                  // Store the split measures state
+                  splitMeasures = shouldSplitMeasures;
+                });
+
+                // Show success message using the main Scaffold context
+                ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                  const SnackBar(content: Text('Song imported successfully!')),
+                );
+
+                // Save the imported song to local storage
+                try {
+                  final directory = await getApplicationDocumentsDirectory();
+                  final file = File('${directory.path}/user_songs.json');
+                  
+                  List<dynamic> existingSongs = [];
+                  if (await file.exists()) {
+                    String content = await file.readAsString();
+                    if (content.isNotEmpty) {
+                      existingSongs = json.decode(content);
+                    }
+                  }
+
+                  // Create the song object for local storage
+                  Map<String, dynamic> songToSave = {
+                    "name": song.name,
+                    "genre": "user",
+                    "key": song.key,
+                    "shareCode": shareCode,
+                    "chords": song.chordChanges.map((chord) => {
+                      "original": chord.originalChord,
+                      "duration": chord.durationInBeats,
+                    }).toList(),
+                  };
+
+                  existingSongs.add(songToSave);
+                  await file.writeAsString(json.encode(existingSongs));
+                } catch (e) {
+                  debugPrint('Error saving imported song to local storage: $e');
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                  SnackBar(content: Text('Error importing song: ${e.toString()}')),
+                );
+              }
+            },
+            child: const Text('Import'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Add this field to store split measures state
+  List<bool> splitMeasures = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,8 +651,18 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
         title: const Text(""),
         actions: [
           IconButton(
+            icon: const Icon(Icons.file_upload, size: 30),
+            tooltip: "Import Song",
+            onPressed: _importSong,
+          ),
+          IconButton(
+            icon: const Icon(Icons.cloud_upload, size: 30, color: Colors.blue),
+            tooltip: "Upload to Firebase",
+            onPressed: _uploadToFirebase,
+          ),
+          IconButton(
             icon: const Icon(Icons.save, size: 30, color: Colors.green),
-            tooltip: "Save Lead Sheet",
+            tooltip: "Save Locally",
             onPressed: _saveLeadSheet,
           ),
           IconButton(
@@ -199,6 +736,7 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
                   child: SizedBox(
                     width: 250, // Adjust width as needed
                     child: TextField(
+                      controller: _titleController,
                       decoration: InputDecoration(
                         labelText: "Song Title",
                         floatingLabelBehavior: FloatingLabelBehavior.never,
@@ -222,6 +760,61 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 250,
+                    child: SearchAnchor(
+                      builder: (BuildContext context, SearchController controller) {
+                        return SearchBar(
+                          controller: controller,
+                          padding: const MaterialStatePropertyAll<EdgeInsets>(
+                            EdgeInsets.symmetric(horizontal: 16.0),
+                          ),
+                          onTap: () {
+                            controller.openView();
+                          },
+                          leading: const Icon(Icons.music_note, color: Colors.black),
+                          hintText: selectedKey,
+                          hintStyle: const MaterialStatePropertyAll<TextStyle>(
+                            TextStyle(color: Colors.black54),
+                          ),
+                          textStyle: const MaterialStatePropertyAll<TextStyle>(
+                            TextStyle(color: Colors.black),
+                          ),
+                          backgroundColor: const MaterialStatePropertyAll<Color>(Colors.white),
+                          elevation: const MaterialStatePropertyAll<double>(1.0),
+                          side: const MaterialStatePropertyAll<BorderSide>(
+                            BorderSide(color: Colors.black12),
+                          ),
+                        );
+                      },
+                      suggestionsBuilder: (BuildContext context, SearchController controller) {
+                        final query = controller.text.toLowerCase();
+                        return keys
+                            .where((key) => key.toLowerCase().contains(query))
+                            .map((String key) {
+                          return ListTile(
+                            title: Text(
+                              key,
+                              style: const TextStyle(color: Colors.black),
+                            ),
+                            tileColor: Colors.white,
+                            hoverColor: Colors.black12,
+                            onTap: () {
+                              setState(() {
+                                selectedKey = key;
+                              });
+                              controller.closeView(key);
+                            },
+                          );
+                        }).toList();
+                      },
+                    ),
+                  ),
+                ),
+              ),
               // Measures Section (Scrollable)
               Expanded(
                 child: SingleChildScrollView(
@@ -240,12 +833,12 @@ class _AddYourOwnPageState extends State<AddYourOwnPage> {
                           showDelete: showDelete,
                           showDurationToggle: showDurationToggle,
                           onDelete: () => _deleteMeasure(index),
-                          // Updated onFocus callback: only pass the controller.
                           onFocus: (controller) {
                             setState(() {
                               activeController = controller;
                             });
                           },
+                          initialIsSplit: index < splitMeasures.length ? splitMeasures[index] : false,
                         );
                       }),
                     ),
