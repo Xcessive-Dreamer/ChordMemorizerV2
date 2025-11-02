@@ -224,3 +224,8 @@ app.*.symbols
 !/dev/ci/**/Gemfile.lock
 !.vscode/settings.json
 
+# Firebase sensitive files (these should not be committed with real API keys)
+**/GoogleService-Info.plist
+**/google-services.json
+**/firebase_options.dart
+

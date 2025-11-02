@@ -10,7 +10,6 @@ import 'country_page_view.dart';
 import 'add_own_page_view.dart';
 import 'metronome_page_view.dart';
 import 'user_songs_page_view.dart';
-import '../services/firebase_service.dart';
 
 class ContentView extends StatelessWidget {
   const ContentView({
@@ -45,7 +44,7 @@ class ContentView extends StatelessWidget {
             dropdownMenuTheme: const DropdownMenuThemeData(
               textStyle: TextStyle(color: Colors.black),
               menuStyle: MenuStyle(
-                backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
+                backgroundColor: WidgetStatePropertyAll<Color>(Colors.white),
               ),
             ),
           ),
@@ -53,7 +52,7 @@ class ContentView extends StatelessWidget {
             dropdownMenuTheme: const DropdownMenuThemeData(
               textStyle: TextStyle(color: Colors.black),
               menuStyle: MenuStyle(
-                backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
+                backgroundColor: WidgetStatePropertyAll<Color>(Colors.white),
               ),
             ),
           ),
@@ -235,7 +234,7 @@ class ContentViewBodyState extends State<ContentViewBody> {
                             enableSearch: true,
                             menuHeight: 200,
                             menuStyle: const MenuStyle(
-                              backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
+                              backgroundColor: WidgetStatePropertyAll<Color>(Colors.white),
                             ),
                             textStyle: const TextStyle(color: Colors.black),
                             width: 220,
@@ -264,7 +263,7 @@ class ContentViewBodyState extends State<ContentViewBody> {
                                       value: genre,
                                       label: genre,
                                       style: const ButtonStyle(
-                                        foregroundColor: MaterialStatePropertyAll<Color>(Colors.black),
+                                        foregroundColor: WidgetStatePropertyAll<Color>(Colors.black),
                                       ),
                                     ))
                                 .toList(),

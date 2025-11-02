@@ -21,6 +21,7 @@ class DatabaseHelper {
 
   Future<Database> _initDB(String fileName) async {
     final dbPath = await getDatabasesPath();
+    debugPrint("📂 Database path: $dbPath");
     final path = join(dbPath, fileName);
 
     return await openDatabase(
@@ -185,7 +186,9 @@ class DatabaseHelper {
 
 
   Future<void> deleteAll() async {
+    // temporarily delete and refill db
     final db = await instance.database;
+    debugPrint("🗑️ Deleting all songs and chord changes...");
     await db.delete('chord_changes');
     await db.delete('songs');
   }

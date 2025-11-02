@@ -6,7 +6,6 @@ import 'src/backend/song_db.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io'; // To check the platform
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'src/services/firebase_service.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -56,7 +55,7 @@ class MyApp extends StatelessWidget {
         dropdownMenuTheme: const DropdownMenuThemeData(
           textStyle: TextStyle(color: Colors.black),
           menuStyle: MenuStyle(
-            backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
+            backgroundColor: WidgetStatePropertyAll<Color>(Colors.white),
           ),
         ),
       ),
@@ -64,7 +63,7 @@ class MyApp extends StatelessWidget {
         dropdownMenuTheme: const DropdownMenuThemeData(
           textStyle: TextStyle(color: Colors.black),
           menuStyle: MenuStyle(
-            backgroundColor: MaterialStatePropertyAll<Color>(Colors.white),
+            backgroundColor: WidgetStatePropertyAll<Color>(Colors.white),
           ),
         ),
       ),

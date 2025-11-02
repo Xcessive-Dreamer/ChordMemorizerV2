@@ -63,18 +63,18 @@ class _MeasureWidgetState extends State<MeasureWidget> {
   }
 
   // A helper method to build a consistent InputDecoration (used here only to draw a border).
-  InputDecoration _buildInputDecoration() {
-    return InputDecoration(
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(5),
-        borderSide: BorderSide(
-          color: widget.showBorders ? Colors.white : Colors.transparent,
-          width: 1,
-        ),
-      ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-    );
-  }
+  // InputDecoration _buildInputDecoration() {
+  //   return InputDecoration(
+  //     border: OutlineInputBorder(
+  //       borderRadius: BorderRadius.circular(5),
+  //       borderSide: BorderSide(
+  //         color: widget.showBorders ? Colors.white : Colors.transparent,
+  //         width: 1,
+  //       ),
+  //     ),
+  //     contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+  //   );
+  // }
 
   // Instead of inline editing, this builds a widget that displays the chord
   // (using your ChordText widget) and, when tapped, opens a full‑screen overlay.

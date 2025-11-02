@@ -2,12 +2,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:io';
-import '../backend/song_db.dart';
-import '../models/quiz_model.dart';
 import 'add_own_page_view.dart';
 import 'package:path_provider/path_provider.dart';
 import '../services/firebase_service.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';  // Add this import for Clipboard
 
 class UserSongsPageView extends StatefulWidget {

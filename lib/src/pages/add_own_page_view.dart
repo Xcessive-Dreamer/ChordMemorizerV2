@@ -3,10 +3,8 @@ import '../settings/measure_widget.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import '../services/firebase_service.dart';
 import '../models/quiz_model.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'user_songs_page_view.dart';
 
@@ -685,8 +683,30 @@ class AddYourOwnPageState extends State<AddYourOwnPage> {
               Padding(
                 padding: const EdgeInsets.all(2.0),
                 child: Row(
+                  
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedKey,
+                        dropdownColor: Colors.grey[900],
+                        style: const TextStyle(color: Colors.white, fontSize: 16),
+                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              selectedKey = newValue;
+                            });
+                          }
+                        },
+                        items: keys.map((String key) {
+                          return DropdownMenuItem<String>(
+                            value: key,
+                            child: Text(key),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.add_box, size: 30),
                       tooltip: "Add Measure",
@@ -756,61 +776,6 @@ class AddYourOwnPageState extends State<AddYourOwnPage> {
                       },
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Center(
-                  child: SizedBox(
-                    width: 250,
-                    child: SearchAnchor(
-                      builder: (BuildContext context, SearchController controller) {
-                        return SearchBar(
-                          controller: controller,
-                          padding: const MaterialStatePropertyAll<EdgeInsets>(
-                            EdgeInsets.symmetric(horizontal: 16.0),
-                          ),
-                          onTap: () {
-                            controller.openView();
-                          },
-                          leading: const Icon(Icons.music_note, color: Colors.black),
-                          hintText: selectedKey,
-                          hintStyle: const MaterialStatePropertyAll<TextStyle>(
-                            TextStyle(color: Colors.black54),
-                          ),
-                          textStyle: const MaterialStatePropertyAll<TextStyle>(
-                            TextStyle(color: Colors.black),
-                          ),
-                          backgroundColor: const MaterialStatePropertyAll<Color>(Colors.white),
-                          elevation: const MaterialStatePropertyAll<double>(1.0),
-                          side: const MaterialStatePropertyAll<BorderSide>(
-                            BorderSide(color: Colors.black12),
-                          ),
-                        );
-                      },
-                      suggestionsBuilder: (BuildContext context, SearchController controller) {
-                        final query = controller.text.toLowerCase();
-                        return keys
-                            .where((key) => key.toLowerCase().contains(query))
-                            .map((String key) {
-                          return ListTile(
-                            title: Text(
-                              key,
-                              style: const TextStyle(color: Colors.black),
-                            ),
-                            tileColor: Colors.white,
-                            hoverColor: Colors.black12,
-                            onTap: () {
-                              setState(() {
-                                selectedKey = key;
-                              });
-                              controller.closeView(key);
-                            },
-                          );
-                        }).toList();
-                      },
                     ),
                   ),
                 ),
