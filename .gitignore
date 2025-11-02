@@ -229,3 +229,8 @@ app.*.symbols
 **/google-services.json
 **/firebase_options.dart
 
+# Environment files with API keys and secrets
+.env
+.env.local
+.env.*.local
+
